@@ -1,0 +1,9 @@
+/Dispetcher.Common/bin/Debug
+/Dispetcher.Common/obj/Debug
+/Dispetcher.Db.MsSql/bin/Debug
+/Dispetcher.Db.MsSql/obj/Debug
+/Dispetcher.Db.SqLite/bin/Debug
+/Dispetcher/bin/Debug
+/Dispetcher/obj/Debug
+/Dispetcher.Db.SqLite/obj/Debug
+/*.suo

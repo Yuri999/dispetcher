@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Data.SQLite;
 using System.Configuration;
 using System.Data;
 using System.Threading;
 using Dispetcher.Common.IoC;
 using Dispetcher.Common.Database;
+using System.Data.SQLite;
 
 namespace Dispetcher.Db.SqLite
 {
-
+    
     [Component(Order = 20)]
     public class SqLiteDbManager : IDbManager
     {
