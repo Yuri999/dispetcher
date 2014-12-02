@@ -64,6 +64,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Tasks\CsvMonitorTask.cs" />
+    <Compile Include="Tasks\LocalDbReconnectTask.cs" />
+    <Compile Include="Tasks\SendChangesTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
