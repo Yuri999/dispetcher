@@ -1,0 +1,12 @@
+﻿<Window x:Class="Dispetcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Button Content="Connect" HorizontalAlignment="Left" Height="45" Margin="101,21,0,0" VerticalAlignment="Top" Width="158" Click="ConnectButton_Click"/>
+        <ListBox Name="lstBox" HorizontalAlignment="Left" Height="205" Margin="34,86,0,0" VerticalAlignment="Top" Width="450"/>
+        <Rectangle Name="rectInit" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="22" Margin="10,21,0,0" Stroke="Black" VerticalAlignment="Top" Width="52"/>
+        <Button Content="Disconnect" HorizontalAlignment="Left" Margin="300,32,0,0" VerticalAlignment="Top" Width="75" Click="DisconnectButton_Click"/>
+
+    </Grid>
+</Window>
