@@ -8,7 +8,7 @@ using Dispetcher.Common.IoC;
 
 namespace Dispetcher.Common.Database
 {
-    [ComponentInterface(LifeTime = ComponentLifeTime.Singleton)]
+    [ComponentInterface(LifeTime = ComponentLifeTime.Singleton, AllowMultiple = false)]
     public interface IDbManager
     {
         event EventHandler OnConnect;

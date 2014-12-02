@@ -9,6 +9,11 @@ namespace Dispetcher.Common.IoC
     [AttributeUsage(AttributeTargets.Interface)]
     public class ComponentInterfaceAttribute: Attribute
     {
-        public ComponentLifeTime LifeTime { get; set; } 
+        public ComponentLifeTime LifeTime { get; set; }
+        
+        /// <summary>
+        /// Может ли быть несколько компонентов этого типа
+        /// </summary>
+        public bool AllowMultiple { get; set; }
     }
 }

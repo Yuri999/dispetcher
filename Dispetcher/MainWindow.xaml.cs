@@ -27,9 +27,18 @@ namespace Dispetcher
         public MainWindow()
         {
             InitializeComponent();
-            IocInitializer.Init();
-            DbManager.OnConnectError += InstanceOnConnectError;
-            DbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
+
+            try
+            {
+                IocInitializer.Init();
+                DbManager.OnConnectError += InstanceOnConnectError;
+                DbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                Application.Current.Shutdown();
+            }
         }
 
         private IDbManager DbManager {get { return Locator.Resolve<IDbManager>(); }}

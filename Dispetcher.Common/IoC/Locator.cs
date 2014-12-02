@@ -12,11 +12,33 @@ namespace Dispetcher.Common.IoC
     {
         public static T Resolve<T>() where T: class
         {
+            var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
+            if (interfaceAttr.AllowMultiple)
+                throw new Exception(String.Format("Multiple components are allowed for type {0}", typeof(T)));
+
+            var components = IocInitializer.CurrentContainer.Resolve<IEnumerable<T>>().ToList();
+            if (!interfaceAttr.AllowMultiple && components.Count > 1)
+                throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
+
+            return components.First();
+        }
+
+        /// <summary>
+        /// Получить все реализации в соответствии с порядком
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<T> ResolveAll<T>() where T : class
+        {
+            var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
+            if (!interfaceAttr.AllowMultiple)
+                throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
+
             return IocInitializer.CurrentContainer.Resolve<IEnumerable<T>>().OrderBy(x =>
                 {
                     var attr = x.GetType().GetCustomAttribute<ComponentAttribute>();
                     return attr.Order;
-                }).First();
+                });
         }
     }
 }

@@ -11,8 +11,7 @@ using System.Data.SqlClient;
 
 namespace Dispetcher.Db.MsSql
 {
-    
-    [Component(Order = 30)]
+    //[Component(Order = 30)]
     public class MsSqlDbManager : IDbManager
     {
         private SqlConnection connection;
