@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher", "Dispetcher\Dispetcher.csproj", "{D8B51702-C152-437E-905D-00A4CC641237}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher.Common", "Dispetcher.Common\Dispetcher.Common.csproj", "{55D1C755-A55C-4BF4-8316-5D89F0B242A1}"
@@ -8,6 +10,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher.Db.SqLite", "Dispetcher.Db.SqLite\Dispetcher.Db.SqLite.csproj", "{5FC0EB78-56D7-4920-A105-6EDD682EB386}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher.Db.MsSql", "Dispetcher.Db.MsSql\Dispetcher.Db.MsSql.csproj", "{2897C362-7A6B-43FE-BA62-F1A2CA95C3B4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParity", "ThirdParity", "{FF594D76-A6FF-4575-91DE-F6ADF64EA3FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S22.Imap", "ThirdParity\S22.Imap\S22.Imap.csproj", "{369C32A5-E099-4BD5-BBBF-51713947CA99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,8 +37,15 @@ Global
 		{2897C362-7A6B-43FE-BA62-F1A2CA95C3B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2897C362-7A6B-43FE-BA62-F1A2CA95C3B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2897C362-7A6B-43FE-BA62-F1A2CA95C3B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{369C32A5-E099-4BD5-BBBF-51713947CA99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{369C32A5-E099-4BD5-BBBF-51713947CA99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{369C32A5-E099-4BD5-BBBF-51713947CA99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{369C32A5-E099-4BD5-BBBF-51713947CA99}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{369C32A5-E099-4BD5-BBBF-51713947CA99} = {FF594D76-A6FF-4575-91DE-F6ADF64EA3FD}
 	EndGlobalSection
 EndGlobal

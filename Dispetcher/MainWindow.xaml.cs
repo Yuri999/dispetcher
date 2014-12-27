@@ -24,28 +24,17 @@ namespace Dispetcher
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly Color _connectionOkColor = Color.FromRgb(50, 255, 50);
+
         public MainWindow()
         {
             InitializeComponent();
-            Init();
-        }
+            
+            var dbManager = Locator.Resolve<IDbManager>();
+            dbManager.OnConnectError += InstanceOnConnectError;
+            dbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
 
-        private void Init()
-        {
-            try
-            {
-                IocInitializer.Init();
-
-                var dbManager = Locator.Resolve<IDbManager>();
-                dbManager.OnConnectError += InstanceOnConnectError;
-                dbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
-                dbManager.ConnectAsync();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-                Application.Current.Shutdown();
-            }            
+            rectInit.Fill = dbManager.Connected ? new SolidColorBrush(_connectionOkColor) : null;
         }
 
         private void InstanceOnConnectError(object sender, ConnectErrorEventArgs connectErrorEventArgs)
@@ -59,14 +48,15 @@ namespace Dispetcher
 
         private void InstanceOnConnectionStateChange(object sender, StateChangeEventArgs stateChangeEventArgs)
         {
-           UiHelper.RunInUiThread(Dispatcher, () =>
+            UiHelper.RunInUiThread(Dispatcher, () =>
             {
                 var s = String.Format("{0} {1}", DateTime.Now, stateChangeEventArgs.CurrentState);
                 lstBox.Items.Add(s);
-                rectInit.Fill = stateChangeEventArgs.CurrentState == ConnectionState.Open 
-                    ? new SolidColorBrush(Color.FromRgb(50, 255, 50)) 
+                rectInit.Fill = stateChangeEventArgs.CurrentState == ConnectionState.Open
+                    ? new SolidColorBrush(_connectionOkColor)
                     : null;
             });
         }
+
     }
 }

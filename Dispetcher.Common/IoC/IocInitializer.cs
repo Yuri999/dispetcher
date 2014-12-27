@@ -2,6 +2,9 @@
 using System.Linq;
 using System.Reflection;
 using Autofac;
+using Autofac.Core;
+using Dispetcher.Common.Mail;
+using Dispetcher.Common.Tasks;
 
 namespace Dispetcher.Common.IoC
 {
@@ -32,8 +35,23 @@ namespace Dispetcher.Common.IoC
                     if (assembly.IsDefined(typeof(ComponentAssemblyAttribute), false))
                         ProcessAssembly(builder, assembly);
                 }
+
+                InitCustom(builder);
+
                 container = builder.Build();
             }
+        }
+
+        private static void InitCustom(ContainerBuilder builder)
+        {
+            const string username = "csv@gde-edet.com";
+            const string password = "Id4nInilrH2Ha";
+        
+            var mailClient = new YandexMailClient(username, password, "");
+            builder.RegisterInstance(mailClient).As<IMailClient>();
+
+            var checkMailboxTask = new CheckMailboxTask();
+            builder.RegisterInstance(checkMailboxTask).AsSelf().As<ITask>();
         }
 
         private static void LoadAssemblies()

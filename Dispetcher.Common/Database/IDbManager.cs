@@ -22,5 +22,7 @@ namespace Dispetcher.Common.Database
         int ExecNonQuery(string sqlQuery);
 
         void CreateStructure();
+
+        bool Connected { get; }
     }
 }
