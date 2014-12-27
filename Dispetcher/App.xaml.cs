@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using Dispetcher.Common.Database;
 using Dispetcher.Common.IoC;
+using Dispetcher.Common.Processor;
 using Dispetcher.Common.Tasks;
 
 namespace Dispetcher
@@ -30,6 +32,9 @@ namespace Dispetcher
             base.OnExit(e);
         }
 
+        private CheckMailboxTask _checkMailboxTask;
+        private CsvFileProcessor _csvFileProcessor;
+
         private void Init()
         {
             try
@@ -37,7 +42,11 @@ namespace Dispetcher
                 IocInitializer.Init();
 
                 Locator.Resolve<IDbManager>().ConnectAsync();
-                Locator.Resolve<CheckMailboxTask>().Start();
+
+                _checkMailboxTask = new CheckMailboxTask(5000);
+                _checkMailboxTask.Start();
+
+                _csvFileProcessor = new CsvFileProcessor();
             }
             catch (Exception e)
             {
@@ -48,7 +57,8 @@ namespace Dispetcher
 
         private void Dispose()
         {
-            Locator.Resolve<CheckMailboxTask>().Stop();
+            _csvFileProcessor.Dispose();
+            _checkMailboxTask.Stop();
         }
     }
 }

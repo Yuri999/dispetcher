@@ -6,12 +6,14 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using Dispetcher.Common.Events;
+using Dispetcher.Common.IoC;
 
 namespace Dispetcher.Common.Mail
 {
     /// <summary>
     /// Работа с почтой
     /// </summary>
+    [ComponentInterface(AllowMultiple = false, LifeTime = ComponentLifeTime.Singleton)]
     public interface IMailClient
     {
         /// <summary>

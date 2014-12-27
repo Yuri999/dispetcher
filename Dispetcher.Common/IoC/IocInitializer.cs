@@ -36,31 +36,8 @@ namespace Dispetcher.Common.IoC
                         ProcessAssembly(builder, assembly);
                 }
 
-                InitCustom(builder);
-
                 container = builder.Build();
             }
-        }
-
-        private static void InitCustom(ContainerBuilder builder)
-        {
-            // TODO move to .config
-            const string username = "csv@gde-edet.com";
-            const string password = "Id4nInilrH2Ha";
-            const string attachmentsTempFolder = "csv_temp";
-            const int checkMailInterval = 5000;
-            
-            var folder = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, attachmentsTempFolder);
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-            
-            var mailClient = new YandexMailClient(username, password, folder);
-            builder.RegisterInstance(mailClient).As<IMailClient>();
-
-            var checkMailboxTask = new CheckMailboxTask(checkMailInterval);
-            builder.RegisterInstance(checkMailboxTask).AsSelf().As<ITask>();
         }
 
         private static void LoadAssemblies()

@@ -5,10 +5,12 @@ using System.Linq;
 using System.Net.Mail;
 using System.Text;
 using Dispetcher.Common.Events;
+using Dispetcher.Common.IoC;
 using S22.Imap;
 
 namespace Dispetcher.Common.Mail
 {
+    [Component]
     public class YandexMailClient : IMailClient
     {
         private const string serverAddress = "imap.yandex.ru";
@@ -18,11 +20,23 @@ namespace Dispetcher.Common.Mail
         private readonly string _password;
         private readonly string _attachmentTempFolder;
 
-        public YandexMailClient(string username, string password, string attachmentTempFolder)
+        public YandexMailClient()
         {
+            // TODO read from .config
+            const string username = "csv@gde-edet.com";
+            const string password = "Id4nInilrH2Ha";
+            const string folderName = "csv_temp";
+
             this._username = username;
             this._password = password;
-            this._attachmentTempFolder = attachmentTempFolder;
+
+            var folder = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, folderName);
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            this._attachmentTempFolder = folder;
         }
 
         /// <summary>

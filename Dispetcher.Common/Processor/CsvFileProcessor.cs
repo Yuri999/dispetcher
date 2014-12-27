@@ -10,7 +10,7 @@ using Dispetcher.Common.Tasks;
 
 namespace Dispetcher.Common.Processor
 {
-    class CsvFileProcessor
+    public class CsvFileProcessor
     {
         private IMailClient _mailClient;
 
@@ -20,6 +20,11 @@ namespace Dispetcher.Common.Processor
             _mailClient.AttachmentSaved += MailClientOnAttachmentSaved;
 
             CheckExistingFiles();
+        }
+
+        public void Dispose()
+        {
+            _mailClient.AttachmentSaved -= MailClientOnAttachmentSaved;
         }
 
         private void CheckExistingFiles()
