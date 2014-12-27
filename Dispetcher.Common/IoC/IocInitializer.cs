@@ -44,13 +44,22 @@ namespace Dispetcher.Common.IoC
 
         private static void InitCustom(ContainerBuilder builder)
         {
+            // TODO move to .config
             const string username = "csv@gde-edet.com";
             const string password = "Id4nInilrH2Ha";
-        
-            var mailClient = new YandexMailClient(username, password, "");
+            const string attachmentsTempFolder = "csv_temp";
+            const int checkMailInterval = 5000;
+            
+            var folder = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, attachmentsTempFolder);
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+            
+            var mailClient = new YandexMailClient(username, password, folder);
             builder.RegisterInstance(mailClient).As<IMailClient>();
 
-            var checkMailboxTask = new CheckMailboxTask();
+            var checkMailboxTask = new CheckMailboxTask(checkMailInterval);
             builder.RegisterInstance(checkMailboxTask).AsSelf().As<ITask>();
         }
 

@@ -13,11 +13,11 @@ namespace Dispetcher.Common.IoC
         public static T Resolve<T>() where T: class
         {
             var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
-            if (interfaceAttr.AllowMultiple)
+            if (interfaceAttr != null && interfaceAttr.AllowMultiple)
                 throw new Exception(String.Format("Multiple components are allowed for type {0}", typeof(T)));
 
             var components = IocInitializer.CurrentContainer.Resolve<IEnumerable<T>>().ToList();
-            if (!interfaceAttr.AllowMultiple && components.Count > 1)
+            if (interfaceAttr != null && !interfaceAttr.AllowMultiple && components.Count > 1)
                 throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
 
             return components.First();

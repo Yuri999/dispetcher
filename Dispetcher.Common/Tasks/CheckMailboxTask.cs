@@ -17,7 +17,7 @@ namespace Dispetcher.Common.Tasks
         private Thread _thread;
         private bool _terminated;
         private readonly int _checkInterval;
-        private readonly IMailClient _mailClient;
+        private IMailClient _mailClient;
 
         /// <summary>
         /// Задача по проверке ящика
@@ -26,11 +26,12 @@ namespace Dispetcher.Common.Tasks
         public CheckMailboxTask(int interval)
         {
             _checkInterval = interval;
-            _mailClient = Locator.Resolve<IMailClient>();
         }
 
         public void Start()
         {
+            _mailClient = Locator.Resolve<IMailClient>();
+
             _thread = new Thread(ThreadWork);
             _thread.IsBackground = true;
             _thread.Start();
