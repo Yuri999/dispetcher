@@ -148,7 +148,7 @@ namespace Dispetcher.Db.MsSql
             }
         }
 
-        public IEnumerable<T> ExecQuery<T>(string sqlQuery)
+        public IEnumerable<T> ExecQuery<T>(string sqlQuery, Dictionary<string, object> parameters = null)
         {
             throw new NotImplementedException();
         }

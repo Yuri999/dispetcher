@@ -26,7 +26,8 @@ namespace Dispetcher.Common.Database
 	`SideNumber`	TEXT,
 	`Schedule`	TEXT,
 	`Route`	TEXT,
-	`VehicleType`	INTEGER
+	`VehicleType`	INTEGER,
+    `Protected` INTEGER
 );"));
 
                 transaction.Commit();

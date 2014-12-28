@@ -153,7 +153,7 @@ namespace Dispetcher.Db.SqLite
             }
         }
 
-        public IEnumerable<T> ExecQuery<T>(string sqlQuery)
+        public IEnumerable<T> ExecQuery<T>(string sqlQuery, Dictionary<string, object> parameters = null)
         {
             var type = typeof(T);
             var constructor = typeof(T).GetConstructor(new Type[0]);
@@ -162,6 +162,19 @@ namespace Dispetcher.Db.SqLite
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = sqlQuery;
+
+            if (parameters != null)
+            {
+                foreach (var item in parameters)
+                {
+                    var p = cmd.CreateParameter();
+                    p.Direction = ParameterDirection.Input;
+                    p.ParameterName = item.Key;
+                    p.Value = item.Value;
+                    cmd.Parameters.Add(p);
+                }
+            }
+
             using (var reader = cmd.ExecuteReader())
             {
                 while (reader.Read())

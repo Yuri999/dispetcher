@@ -25,6 +25,9 @@ namespace Dispetcher.Common.Processor
 
         private readonly Queue<string> _files = new Queue<string>(); 
 
+        private Lazy<IDbManager> dbManagerLazy = new Lazy<IDbManager>(() => Locator.Resolve<IDbManager>());
+        private IDbManager dbManager { get { return dbManagerLazy.Value; } }
+
         public CsvFileProcessor()
         {
             _thread = new Thread(QueueThread);
@@ -33,11 +36,22 @@ namespace Dispetcher.Common.Processor
             _thread.Start();
         }
 
+        /// <summary>
+        /// Действие перед записью новых данных в БД
+        /// </summary>
+        public event Action BeforeDataChange;
+
+        /// <summary>
+        /// Действие после записи новых данных в БД
+        /// </summary>
+        public event Action AfterDataChange;
+        
         private void QueueThread()
         {
             while (!_terminated)
             {
                 string filename = null;
+
                 lock (_files)
                 {
                     if (_files.Count > 0)
@@ -50,8 +64,7 @@ namespace Dispetcher.Common.Processor
                 {
                     try
                     {
-                        ProcessCSV(filename);
-                        File.Delete(filename);
+                        ProcessFile(filename);
                     }
                     catch (Exception ex)
                     {
@@ -104,14 +117,60 @@ namespace Dispetcher.Common.Processor
             }
         }
 
+        private void ProcessFile(string filename)
+        {
+            var newItems = ReadItems(filename, true).Distinct(new DateSideNummberEqualityComparer()).ToList();
+
+            if (BeforeDataChange != null)
+            {
+                BeforeDataChange();
+            }
+
+            try
+            {
+                var transaction = dbManager.BeginTransaction();
+                try
+                {
+                    var dates = newItems.Select(x => x.Date).Distinct().ToArray();
+
+                    // считываем из базы защищенные записи
+                    var protectedItems = dbManager.ExecQuery<CsvItem>("SELECT * FROM [Journal] WHERE Date IN (@dates) AND Protected = 1",
+                        new Dictionary<string, object>() {{"dates", dates}}).ToList();
+
+                    // удалям все незащищенные записи за эти числа
+                    dbManager.ExecNonQuery("DELETE FROM [Journal] WHERE Date IN (@dates) AND Protected = 0",
+                        new Dictionary<string, object>() { { "dates", dates } });
+
+                    // TODO как мержить изменения то ???
+
+                    InsertItems(newItems);
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    // TODO log
+                    transaction.Rollback();
+                }
+                
+                File.Delete(filename);
+            }
+            finally
+            {
+                if (AfterDataChange != null)
+                {
+                    AfterDataChange();
+                }
+            }            
+        }
+
         /// <summary>
-        /// Неподсредственно обработка CSV файла
+        /// Парсинг строк CSV файла
         /// </summary>
         /// <param name="filename"></param>
-        private void ProcessCSV(string filename)
+        /// <param name="skipWrongLines">Пропускать строки с ошибками или выбрасывать исключение.</param>
+        private IEnumerable<CsvItem> ReadItems(string filename, bool skipWrongLines)
         {
-            var items = new List<CsvItem>();
-            
             using (var fileStream = System.IO.File.OpenRead(filename))
             {
                 using (var reader = new StreamReader(fileStream, _encoding))
@@ -124,49 +183,69 @@ namespace Dispetcher.Common.Processor
                         if (String.IsNullOrEmpty(line))
                             continue;
 
-                        CsvItem csvItem;
+                        CsvItem csvItem = null;
                         try
                         {
                             csvItem = ConvertToCsvItem(line);
-                            items.Add(csvItem);
                         }
                         catch (Exception ex)
                         {
                             // TODO log строка i
+                            if (!skipWrongLines)
+                                throw;
                         }
+
+                        if (csvItem != null)
+                            yield return csvItem;
                     }
                 }
             }
-
-            // TODO тут должна быть какая-то валидация items на повторяющиеся записи
-
-            var dbManager = Locator.Resolve<IDbManager>();
-            var transaction = dbManager.BeginTransaction();
-            try
-            {
-                foreach (var csvItem in items)
-                {
-                    dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumber, Schedule, Route, VehicleType) " +
-                                           "VALUES (@date, @sidenumber, @schedule, @route, @vehicletype)",
-                        new Dictionary<string, object>()
-                        {
-                            { "date", csvItem.Date }, 
-                            { "sidenumber", csvItem.SideNumber },
-                            { "schedule", csvItem.Schedule },
-                            { "route", csvItem.RouteName },
-                            { "vehicletype", csvItem.VehicleType }
-                        });
-                }
-                transaction.Commit();
-            }
-            catch(Exception ex)
-            {
-                // TODO log
-                transaction.Rollback();
-            }
-
         }
 
+        private void InsertItems(IEnumerable<CsvItem> items)
+        {
+            foreach (var csvItem in items)
+            {
+                dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumber, Schedule, Route, VehicleType, Protected) " +
+                                        "VALUES (@date, @sidenumber, @schedule, @route, @vehicletype, @protected)",
+                    new Dictionary<string, object>()
+                    {
+                        { "date", csvItem.Date }, 
+                        { "sidenumber", csvItem.SideNumber },
+                        { "schedule", csvItem.Schedule },
+                        { "route", csvItem.Route },
+                        { "vehicletype", csvItem.VehicleType },
+                        { "protected", false },
+                    });
+            }
+        }
+
+        private void UpdateItems(IEnumerable<CsvItem> items)
+        {
+            foreach (var csvItem in items)
+            {
+                dbManager.ExecNonQuery("UPDATE [Journal] SET SideNumber = @sidenumber, Schedule = @schedule WHERE Id = @id",
+                    new Dictionary<string, object>()
+                    {
+                        {"sidenumber", csvItem.SideNumber},
+                        {"schedule", csvItem.Schedule},
+                        {"id", csvItem.Id},
+                    });
+            }
+        }
+
+        private void DeleteItems(IEnumerable<CsvItem> items)
+        {
+            dbManager.ExecNonQuery("DELETE FROM [Journal] WHERE Id IN (@ids)",
+                new Dictionary<string, object>() { { "ids", items.Select(i => i.Id).ToArray() } });
+        }
+
+        /// <summary>
+        /// Парсит строку в объект CsvItem
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         private CsvItem ConvertToCsvItem(string line)
         {
             var items = line.Split(new [] { ';' }).ToList();
@@ -193,8 +272,8 @@ namespace Dispetcher.Common.Processor
             }
 
             csvItem.SideNumber = items[1];
-            csvItem.RouteName = items[2];
-            csvItem.Schedule = items[3];
+            csvItem.Schedule = items[2];
+            csvItem.Route = items[3];
             
             VehicleType vt;
             if (!Enum.TryParse<VehicleType>(items[4], true, out vt))
@@ -203,6 +282,19 @@ namespace Dispetcher.Common.Processor
             csvItem.VehicleType = vt;
 
             return csvItem;
+        }
+
+        class DateSideNummberEqualityComparer : IEqualityComparer<CsvItem>
+        {
+            public bool Equals(CsvItem x, CsvItem y)
+            {
+                return x.DateSideNumberHash == y.DateSideNumberHash;
+            }
+
+            public int GetHashCode(CsvItem obj)
+            {
+                return obj.DateSideNumberHash;
+            }
         }
     }
 }

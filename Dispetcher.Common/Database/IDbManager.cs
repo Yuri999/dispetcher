@@ -22,7 +22,7 @@ namespace Dispetcher.Common.Database
         
         void Disconnect();
 
-        IEnumerable<T> ExecQuery<T>(string sqlQuery);
+        IEnumerable<T> ExecQuery<T>(string sqlQuery, Dictionary<string, object> parameters = null);
 
         int ExecNonQuery(string sqlQuery, Dictionary<string, object> parameters = null);
 
