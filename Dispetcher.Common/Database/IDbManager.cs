@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Data;
 using Dispetcher.Common.IoC;
 
@@ -15,14 +15,19 @@ namespace Dispetcher.Common.Database
         event EventHandler<ConnectErrorEventArgs> OnConnectError;
         event EventHandler<StateChangeEventArgs> OnConnectionStateChange;
 
+        void Connect();
+        
+        [Obsolete]
         void ConnectAsync();
+        
         void Disconnect();
 
-        T[] ExecQuery<T>(string sqlQuery);
-        int ExecNonQuery(string sqlQuery);
+        IEnumerable<T> ExecQuery<T>(string sqlQuery);
 
-        void CreateStructure();
+        int ExecNonQuery(string sqlQuery, Dictionary<string, object> parameters = null);
 
         bool Connected { get; }
+
+        DbTransaction BeginTransaction();
     }
 }

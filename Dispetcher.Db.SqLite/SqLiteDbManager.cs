@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Configuration;
 using System.Data;
@@ -37,11 +41,25 @@ namespace Dispetcher.Db.SqLite
             }
         }
 
+        public DbTransaction BeginTransaction()
+        {
+            return connection.BeginTransaction();
+        }
+
         public event EventHandler OnConnect;
         public event EventHandler<ConnectErrorEventArgs> OnConnectError;
 
         public event EventHandler<StateChangeEventArgs> OnConnectionStateChange;
 
+        public void Connect()
+        {
+            ConnectTask();
+            
+            if (!Connected)
+                throw new Exception("Не удалось подключиться к БД.");
+        }
+
+        [Obsolete]
         public void ConnectAsync()
         {
             lock (connectingSyncObj)
@@ -135,17 +153,55 @@ namespace Dispetcher.Db.SqLite
             }
         }
 
-        public T[] ExecQuery<T>(string sqlQuery)
+        public IEnumerable<T> ExecQuery<T>(string sqlQuery)
         {
-            throw new NotImplementedException();
+            var type = typeof(T);
+            var constructor = typeof(T).GetConstructor(new Type[0]);
+            if (constructor == null)
+                throw new Exception(String.Format("Нет конструктора по умолчанию для типа {0}.", type.ToString()));
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = sqlQuery;
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var values = reader.GetValues();
+                    var item = (T)constructor.Invoke(null);
+                    foreach (var key in values.AllKeys)
+                    {
+                        var prop = type.GetProperty(key);
+                        if (prop.CanWrite)
+                        {
+                            prop.SetValue(item, values[key]);
+                        }
+                    }
+
+                    yield return item;
+                }
+            }
         }
 
-        public int ExecNonQuery(string sqlQuery)
+        public int ExecNonQuery(string sqlQuery, Dictionary<string,object> parameters = null)
         {
             var cmd = connection.CreateCommand();
             cmd.CommandText = sqlQuery;
+
+            if (parameters != null)
+            {
+                foreach (var item in parameters)
+                {
+                    var p = cmd.CreateParameter();
+                    p.Direction = ParameterDirection.Input;
+                    p.ParameterName = item.Key;
+                    p.Value = item.Value;
+                    cmd.Parameters.Add(p);
+                }
+            }
+
             return cmd.ExecuteNonQuery();
         }
+
 
         public void Disconnect()
         {
@@ -159,11 +215,6 @@ namespace Dispetcher.Db.SqLite
             catch (Exception)
             {
             }
-        }
-
-        public void CreateStructure()
-        {
-            //ExecNonQuery(Resources.database);
         }
     }
 }

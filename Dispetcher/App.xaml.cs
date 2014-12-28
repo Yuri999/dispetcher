@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Data;
 using System.IO;
@@ -44,7 +45,9 @@ namespace Dispetcher
                 IocInitializer.Init();
 
                 // соединяемся с локальной БД
-                Locator.Resolve<IDbManager>().ConnectAsync();
+                Locator.Resolve<IDbManager>().Connect();
+
+                StructureCreator.Create();
 
                 var mailClient = Locator.Resolve<IMailClient>();
 
@@ -54,6 +57,7 @@ namespace Dispetcher
                 #endregion
 
                 #region запускаем процессор CSV
+                var mailClient = Locator.Resolve<IMailClient>();
                 _csvFileProcessor = new CsvFileProcessor();
                 _csvFileProcessor.Subscribe(mailClient);
                 _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);

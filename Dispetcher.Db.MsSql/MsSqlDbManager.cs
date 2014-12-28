@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Configuration;
@@ -36,11 +37,25 @@ namespace Dispetcher.Db.MsSql
             }
         }
 
+        public DbTransaction BeginTransaction()
+        {
+            throw new NotImplementedException();
+        }
+
         public event EventHandler OnConnect;
         public event EventHandler<ConnectErrorEventArgs> OnConnectError;
 
         public event EventHandler<StateChangeEventArgs> OnConnectionStateChange;
 
+        public void Connect()
+        {
+            ConnectTask();
+
+            if (!Connected)
+                throw new Exception("Не удалось подключиться к БД.");
+        }
+        
+        [Obsolete]
         public void ConnectAsync()
         {
             lock (connectingSyncObj)
@@ -133,15 +148,28 @@ namespace Dispetcher.Db.MsSql
             }
         }
 
-        public T[] ExecQuery<T>(string sqlQuery)
+        public IEnumerable<T> ExecQuery<T>(string sqlQuery)
         {
             throw new NotImplementedException();
         }
 
-        public int ExecNonQuery(string sqlQuery)
+        public int ExecNonQuery(string sqlQuery, Dictionary<string, object> parameters = null)
         {
             var cmd = connection.CreateCommand();
             cmd.CommandText = sqlQuery;
+            
+            if (parameters != null)
+            {
+                foreach (var item in parameters)
+                {
+                    var p = cmd.CreateParameter();
+                    p.Direction = ParameterDirection.Input;
+                    p.ParameterName = item.Key;
+                    p.Value = item.Value;
+                    cmd.Parameters.Add(p);
+                }
+            }
+
             return cmd.ExecuteNonQuery();
         }
 
@@ -159,9 +187,5 @@ namespace Dispetcher.Db.MsSql
             }
         }
 
-        public void CreateStructure()
-        {
-            //ExecNonQuery(Resources.database);
-        }
     }
 }

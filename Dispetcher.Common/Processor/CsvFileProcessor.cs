@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Dispetcher.Common.Database;
+using Dispetcher.Common.IoC;
 using Dispetcher.Common.Mail;
+using Dispetcher.Common.Models;
 
 namespace Dispetcher.Common.Processor
 {
     public class CsvFileProcessor
     {
+        private const string csvDateFormat1 = "dd.MM.yyyy";
+        private const string csvDateFormat2 = "dd.MM.yy";
         private readonly Encoding _encoding = Encoding.GetEncoding(1251);
         
         private IMailClient _mailClient;
@@ -104,22 +110,99 @@ namespace Dispetcher.Common.Processor
         /// <param name="filename"></param>
         private void ProcessCSV(string filename)
         {
+            var items = new List<CsvItem>();
+            
             using (var fileStream = System.IO.File.OpenRead(filename))
             {
                 using (var reader = new StreamReader(fileStream, _encoding))
                 {
+                    var i = 0;
                     while (!reader.EndOfStream)
                     {
+                        i++;
                         var line = reader.ReadLine();
                         if (String.IsNullOrEmpty(line))
                             continue;
 
-                        var items = line.Split(new char[] { ';' }).ToList();
-
-                        // TODO
+                        CsvItem csvItem;
+                        try
+                        {
+                            csvItem = ConvertToCsvItem(line);
+                            items.Add(csvItem);
+                        }
+                        catch (Exception ex)
+                        {
+                            // TODO log строка i
+                        }
                     }
                 }
             }
+
+            // TODO тут должна быть какая-то валидация items на повторяющиеся записи
+
+            var dbManager = Locator.Resolve<IDbManager>();
+            var transaction = dbManager.BeginTransaction();
+            try
+            {
+                foreach (var csvItem in items)
+                {
+                    dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumber, Schedule, Route, VehicleType) " +
+                                           "VALUES (@date, @sidenumber, @schedule, @route, @vehicletype)",
+                        new Dictionary<string, object>()
+                        {
+                            { "date", csvItem.Date }, 
+                            { "sidenumber", csvItem.SideNumber },
+                            { "schedule", csvItem.Schedule },
+                            { "route", csvItem.RouteName },
+                            { "vehicletype", csvItem.VehicleType }
+                        });
+                }
+                transaction.Commit();
+            }
+            catch(Exception ex)
+            {
+                // TODO log
+                transaction.Rollback();
+            }
+
+        }
+
+        private CsvItem ConvertToCsvItem(string line)
+        {
+            var items = line.Split(new [] { ';' }).ToList();
+            if (items.Count < 5)
+                return null;
+
+            var csvItem = new CsvItem();
+
+            DateTime date;
+            if (DateTime.TryParseExact(items[0], csvDateFormat1, null, DateTimeStyles.None, out date))
+            {
+                csvItem.Date = date;
+            }
+            else
+            {
+                if (DateTime.TryParseExact(items[0], csvDateFormat2, null, DateTimeStyles.None, out date))
+                {
+                    csvItem.Date = date;
+                }
+                else
+                {
+                    throw new Exception("Не удалось разобрать дату.");
+                }
+            }
+
+            csvItem.SideNumber = items[1];
+            csvItem.RouteName = items[2];
+            csvItem.Schedule = items[3];
+            
+            VehicleType vt;
+            if (!Enum.TryParse<VehicleType>(items[4], true, out vt))
+                throw new Exception("Не удалось разобрать тип транспорта.");
+
+            csvItem.VehicleType = vt;
+
+            return csvItem;
         }
     }
 }
