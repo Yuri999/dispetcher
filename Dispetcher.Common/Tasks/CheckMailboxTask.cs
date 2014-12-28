@@ -30,6 +30,7 @@ namespace Dispetcher.Common.Tasks
         public void Start()
         {
             _thread = new Thread(ThreadWork);
+            _thread.Name = "CheckMailboxThread";
             _thread.IsBackground = true;
             _thread.Start();
         }
