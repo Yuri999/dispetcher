@@ -57,7 +57,6 @@ namespace Dispetcher
                 #endregion
 
                 #region запускаем процессор CSV
-                var mailClient = Locator.Resolve<IMailClient>();
                 _csvFileProcessor = new CsvFileProcessor();
                 _csvFileProcessor.Subscribe(mailClient);
                 _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);
