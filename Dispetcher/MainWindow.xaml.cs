@@ -29,12 +29,19 @@ namespace Dispetcher
         public MainWindow()
         {
             InitializeComponent();
-            
-            var dbManager = Locator.Resolve<IDbManager>();
-            dbManager.OnConnectError += InstanceOnConnectError;
-            dbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
 
-            rectInit.Fill = dbManager.Connected ? new SolidColorBrush(_connectionOkColor) : null;
+            try
+            {
+                var dbManager = Locator.Resolve<IDbManager>();
+                dbManager.OnConnectError += InstanceOnConnectError;
+                dbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
+
+                rectInit.Fill = dbManager.Connected ? new SolidColorBrush(_connectionOkColor) : null;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Ошибка запуска");
+            }
         }
 
         private void InstanceOnConnectError(object sender, ConnectErrorEventArgs connectErrorEventArgs)

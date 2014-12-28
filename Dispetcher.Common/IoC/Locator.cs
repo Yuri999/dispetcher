@@ -12,6 +12,9 @@ namespace Dispetcher.Common.IoC
     {
         public static T Resolve<T>() where T: class
         {
+            if (IocInitializer.CurrentContainer == null)
+                throw new Exception("IoC не инициализирован.");
+
             var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
             if (interfaceAttr != null && interfaceAttr.AllowMultiple)
                 throw new Exception(String.Format("Multiple components are allowed for type {0}", typeof(T)));
@@ -30,6 +33,9 @@ namespace Dispetcher.Common.IoC
         /// <returns></returns>
         public static IEnumerable<T> ResolveAll<T>() where T : class
         {
+            if (IocInitializer.CurrentContainer == null)
+                throw new Exception("IoC не инициализирован.");
+
             var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
             if (!interfaceAttr.AllowMultiple)
                 throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));

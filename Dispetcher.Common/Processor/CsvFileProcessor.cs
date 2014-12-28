@@ -16,20 +16,30 @@ namespace Dispetcher.Common.Processor
 
         public CsvFileProcessor()
         {
-            _mailClient = Locator.Resolve<IMailClient>();
-            _mailClient.AttachmentSaved += MailClientOnAttachmentSaved;
+        }
 
-            CheckExistingFiles();
+        public void Subscribe(IMailClient mailClient)
+        {
+            _mailClient = mailClient;
+            _mailClient.AttachmentSaved += MailClientOnAttachmentSaved;
+        }
+
+        public void Unsubscribe()
+        {
+            if (_mailClient != null)
+            {
+                _mailClient.AttachmentSaved -= MailClientOnAttachmentSaved;
+            }
         }
 
         public void Dispose()
         {
-            _mailClient.AttachmentSaved -= MailClientOnAttachmentSaved;
+            Unsubscribe();
         }
 
-        private void CheckExistingFiles()
+        public void CheckExistingFiles(string folder)
         {
-            var files = Directory.GetFiles(_mailClient.SaveFolder);
+            var files = Directory.GetFiles(folder);
             foreach (var fileName in files)
             {
                 Enqueue(fileName);

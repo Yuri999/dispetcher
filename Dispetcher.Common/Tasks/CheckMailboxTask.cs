@@ -9,29 +9,26 @@ using Dispetcher.Common.Mail;
 
 namespace Dispetcher.Common.Tasks
 {
-    /// <summary>
-    /// Проверяет поступление новых CSV
-    /// </summary>
     public class CheckMailboxTask : ITask
     {
         private Thread _thread;
         private bool _terminated;
         private readonly int _checkInterval;
-        private IMailClient _mailClient;
+        private readonly IMailClient _mailClient;
 
         /// <summary>
-        /// Задача по проверке ящика
+        /// Задача по проверке ящика. Периодически запускает <see cref="IMailClient.Check"/>.
         /// </summary>
+        /// <param name="mailClient"></param>
         /// <param name="interval">Интервал проверки в миллисекундах</param>
-        public CheckMailboxTask(int interval)
+        public CheckMailboxTask(IMailClient mailClient, int interval)
         {
+            _mailClient = mailClient;
             _checkInterval = interval;
         }
 
         public void Start()
         {
-            _mailClient = Locator.Resolve<IMailClient>();
-
             _thread = new Thread(ThreadWork);
             _thread.IsBackground = true;
             _thread.Start();
