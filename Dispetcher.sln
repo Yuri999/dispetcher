@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher", "Dispetcher\Dispetcher.csproj", "{D8B51702-C152-437E-905D-00A4CC641237}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2897C362-7A6B-43FE-BA62-F1A2CA95C3B4} = {2897C362-7A6B-43FE-BA62-F1A2CA95C3B4}
+		{5FC0EB78-56D7-4920-A105-6EDD682EB386} = {5FC0EB78-56D7-4920-A105-6EDD682EB386}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dispetcher.Common", "Dispetcher.Common\Dispetcher.Common.csproj", "{55D1C755-A55C-4BF4-8316-5D89F0B242A1}"
 EndProject
