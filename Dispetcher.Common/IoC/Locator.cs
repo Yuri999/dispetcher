@@ -23,6 +23,9 @@ namespace Dispetcher.Common.IoC
             if (interfaceAttr != null && !interfaceAttr.AllowMultiple && components.Count > 1)
                 throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
 
+            if (components.Count == 0)
+                throw new Exception(String.Format("Невозможно разрешить зависимость для типа {0}.", typeof(T).ToString()));
+
             return components.First();
         }
 

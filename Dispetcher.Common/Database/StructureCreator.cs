@@ -23,7 +23,8 @@ namespace Dispetcher.Common.Database
                 manager.ExecNonQuery(String.Format(@"CREATE TABLE `Journal` (
 	`Id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	`Date`	TEXT NOT NULL,
-	`SideNumber`	TEXT,
+	`SideNumberPlan`	TEXT,
+    `SideNumberFact`	TEXT,
 	`Schedule`	TEXT,
 	`Route`	TEXT,
 	`VehicleType`	INTEGER,

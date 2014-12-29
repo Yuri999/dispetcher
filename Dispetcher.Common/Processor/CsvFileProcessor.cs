@@ -119,7 +119,7 @@ namespace Dispetcher.Common.Processor
 
         private void ProcessFile(string filename)
         {
-            var newItems = ReadItems(filename, true).Distinct(new DateSideNummberEqualityComparer()).ToList();
+            var newItems = ReadItems(filename, true).ToList();
 
             if (BeforeDataChange != null)
             {
@@ -169,8 +169,10 @@ namespace Dispetcher.Common.Processor
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="skipWrongLines">Пропускать строки с ошибками или выбрасывать исключение.</param>
-        private IEnumerable<CsvItem> ReadItems(string filename, bool skipWrongLines)
+        private List<CsvItem> ReadItems(string filename, bool skipWrongLines)
         {
+            var dict = new Dictionary<string, CsvItem>();
+
             using (var fileStream = System.IO.File.OpenRead(filename))
             {
                 using (var reader = new StreamReader(fileStream, _encoding))
@@ -196,40 +198,39 @@ namespace Dispetcher.Common.Processor
                         }
 
                         if (csvItem != null)
-                            yield return csvItem;
+                        {
+                            var key = String.Format("{0}|{1}|{2}|{3}", csvItem.Date.ToShortDateString(), csvItem.Route, csvItem.VehicleType, csvItem.Schedule);
+                            if (!dict.ContainsKey(key))
+                            {
+                                dict.Add(key, csvItem);
+                            }
+                            else
+                            {
+                                dict[key] = csvItem;
+                            }
+                        }
                     }
                 }
             }
+
+            return dict.Values.ToList();
         }
 
         private void InsertItems(IEnumerable<CsvItem> items)
         {
             foreach (var csvItem in items)
             {
-                dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumber, Schedule, Route, VehicleType, Protected) " +
-                                        "VALUES (@date, @sidenumber, @schedule, @route, @vehicletype, @protected)",
+                dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumberPlan, SideNumberFact, Schedule, Route, VehicleType, Protected) " +
+                                        "VALUES (@date, @sidenumberplan, @sidenumberfact, @schedule, @route, @vehicletype, @protected)",
                     new Dictionary<string, object>()
                     {
                         { "date", csvItem.Date }, 
-                        { "sidenumber", csvItem.SideNumber },
+                        { "sidenumberplan", csvItem.SideNumberPlan },
+                        { "sidenumberfact", csvItem.SideNumberFact },
                         { "schedule", csvItem.Schedule },
                         { "route", csvItem.Route },
                         { "vehicletype", csvItem.VehicleType },
                         { "protected", false },
-                    });
-            }
-        }
-
-        private void UpdateItems(IEnumerable<CsvItem> items)
-        {
-            foreach (var csvItem in items)
-            {
-                dbManager.ExecNonQuery("UPDATE [Journal] SET SideNumber = @sidenumber, Schedule = @schedule WHERE Id = @id",
-                    new Dictionary<string, object>()
-                    {
-                        {"sidenumber", csvItem.SideNumber},
-                        {"schedule", csvItem.Schedule},
-                        {"id", csvItem.Id},
                     });
             }
         }
@@ -271,7 +272,8 @@ namespace Dispetcher.Common.Processor
                 }
             }
 
-            csvItem.SideNumber = items[1];
+            csvItem.SideNumberPlan = items[1];
+            csvItem.SideNumberFact = items[1];
             csvItem.Schedule = items[2];
             csvItem.Route = items[3];
             

@@ -18,7 +18,9 @@ namespace Dispetcher.Common.Models
 
         public string Schedule { get; set; }
 
-        public string SideNumber { get; set; }
+        public string SideNumberPlan { get; set; }
+
+        public string SideNumberFact { get; set; }
 
         public VehicleType VehicleType { get; set; }
 
@@ -26,11 +28,11 @@ namespace Dispetcher.Common.Models
 
         public bool Protected { get; set; }
 
-        public int DateSideNumberHash { get { return String.Format("{0}|{1}", Date.ToUniversalTime().ToString("o"), SideNumber).GetHashCode(); } }
+        public int DateSideNumberHash { get { return String.Format("{0}|{1}", Date.ToUniversalTime().ToString("o"), SideNumberPlan).GetHashCode(); } }
 
         public override string ToString()
         {
-            return String.Format("{0}|{1}|{2}|{3}|{4}", Date, Route, VehicleType, SideNumber, Schedule);
+            return String.Format("{0}|{1}|{2}|{3}|{4}|{5}", Date.ToShortDateString(), Route, VehicleType, Schedule, SideNumberPlan, SideNumberFact);
         }
     }
 }
