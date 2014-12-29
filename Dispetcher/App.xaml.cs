@@ -54,12 +54,14 @@ namespace Dispetcher
                 #region Запускаем периодический забор почты и скидывание на диск
                 _checkMailboxTask = new CheckMailboxTask(mailClient, 5000);
                 _checkMailboxTask.Start();
+                IocInitializer.RegisterInstance(_checkMailboxTask);
                 #endregion
 
                 #region запускаем процессор CSV
                 _csvFileProcessor = new CsvFileProcessor();
                 _csvFileProcessor.Subscribe(mailClient);
                 _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);
+                IocInitializer.RegisterInstance(_csvFileProcessor);
                 #endregion
             }
             catch (Exception e)

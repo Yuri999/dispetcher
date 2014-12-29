@@ -181,12 +181,19 @@ namespace Dispetcher.Db.SqLite
                 {
                     var values = reader.GetValues();
                     var item = (T)constructor.Invoke(null);
-                    foreach (var key in values.AllKeys)
+                    foreach (string key in values.AllKeys)
                     {
                         var prop = type.GetProperty(key);
                         if (prop.CanWrite)
                         {
-                            prop.SetValue(item, values[key]);
+                            if (prop.PropertyType.IsEnum)
+                            {
+                                prop.SetValue(item, Enum.ToObject(prop.PropertyType, reader[key]));
+                            }
+                            else
+                            {
+                                prop.SetValue(item, Convert.ChangeType(reader[key], prop.PropertyType));
+                            }
                         }
                     }
 

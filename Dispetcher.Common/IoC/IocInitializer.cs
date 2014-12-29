@@ -81,5 +81,12 @@ namespace Dispetcher.Common.IoC
                 }
             }
         }
+
+        public static void RegisterInstance<T>(T instance) where T:class
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterInstance(instance).AsSelf();
+            builder.Update(container);
+        }
     }
 }
