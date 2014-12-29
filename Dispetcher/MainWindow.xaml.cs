@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -16,6 +19,8 @@ using System.Data;
 using Dispetcher.Common.Database;
 using Dispetcher.Common.Helpers;
 using Dispetcher.Common.IoC;
+using Dispetcher.Common.Models;
+using Dispetcher.Common.Processor;
 
 namespace Dispetcher
 {
@@ -26,22 +31,57 @@ namespace Dispetcher
     {
         private readonly Color _connectionOkColor = Color.FromRgb(50, 255, 50);
 
+        private Lazy<CsvFileProcessor> _csvFileProcessorLazy = new Lazy<CsvFileProcessor>(() => Locator.Resolve<CsvFileProcessor>());
+        private CsvFileProcessor CsvFileProcessor { get { return _csvFileProcessorLazy.Value; } }
+
+        private Lazy<IDbManager> dbManagerLazy = new Lazy<IDbManager>(() => Locator.Resolve<IDbManager>());
+        private IDbManager DbManager { get { return dbManagerLazy.Value; } }
+
+
+        private ObservableCollection<CsvItem> MyList = new ObservableCollection<CsvItem>();
+
         public MainWindow()
         {
             InitializeComponent();
 
             try
             {
-                var dbManager = Locator.Resolve<IDbManager>();
-                dbManager.OnConnectError += InstanceOnConnectError;
-                dbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
+                DbManager.OnConnectError += InstanceOnConnectError;
+                DbManager.OnConnectionStateChange += InstanceOnConnectionStateChange;
 
-                rectInit.Fill = dbManager.Connected ? new SolidColorBrush(_connectionOkColor) : null;
+                rectInit.Fill = DbManager.Connected ? new SolidColorBrush(_connectionOkColor) : null;
+
+                LoadData();
+                CsvFileProcessor.BeforeDataChange += CsvFileProcessorOnBeforeDataChange;
+                CsvFileProcessor.AfterDataChange += CsvFileProcessorOnAfterDataChange;
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message, "Ошибка запуска");
             }
+        }
+
+        private void LoadData()
+        {
+            MyList.Clear();
+
+            var items = DbManager.ExecQuery<CsvItem>("SELECT * FROM [Journal] WHERE Date = @date",
+                new Dictionary<string, object>() {{"date", /*DateTime.Today*/ new DateTime(2014,09,07)}}).ToList();
+
+            foreach (var csvItem in items)
+            {
+                MyList.Add(csvItem);
+            }
+        }
+
+        private void CsvFileProcessorOnAfterDataChange()
+        {
+            LoadData();
+        }
+
+        private void CsvFileProcessorOnBeforeDataChange()
+        {
+            
         }
 
         private void InstanceOnConnectError(object sender, ConnectErrorEventArgs connectErrorEventArgs)
@@ -64,6 +104,5 @@ namespace Dispetcher
                     : null;
             });
         }
-
     }
 }

@@ -2,9 +2,18 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        <ListBox Name="lstBox" HorizontalAlignment="Left" Height="205" Margin="10,10,0,0" VerticalAlignment="Top" Width="497"/>
-        <Rectangle Name="rectInit" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="22" Margin="486,288,0,0" Stroke="Black" VerticalAlignment="Top" Width="21"/>
+    <Grid Margin="0,0,0,3">
+        <ListBox Name="lstBox" HorizontalAlignment="Left" Height="24" Margin="10,10,0,0" VerticalAlignment="Top" Width="497"/>
+        <Rectangle Name="rectInit" Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="13" Margin="495,297,0,0" Stroke="Black" VerticalAlignment="Top" Width="12"/>
+        <DataGrid Name="mainDataGrid" ItemsSource="{Binding Source=MyList, Mode=OneWay}" AutoGenerateColumns="False" Margin="10,39,10,28">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Дата" Binding="{Binding Date}"/>
+                <DataGridTextColumn Header="Маршрут" Binding="{Binding Route}"/>
+                <DataGridTextColumn Header="Вид транспорта" Binding="{Binding VehicleType}"/>
+                <DataGridTextColumn Header="Бортовой номер" Binding="{Binding SideNumber}"/>
+                <DataGridTextColumn Header="Расписание" Binding="{Binding Schedule}"/>
+            </DataGrid.Columns>
+        </DataGrid>
 
     </Grid>
 </Window>
