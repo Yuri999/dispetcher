@@ -42,7 +42,7 @@ namespace DispetcherWF
 
         private void LoadData()
         {
-            dataSet1.Tables[0].Clear();
+            dataSet1.Tables[0].Rows.Clear();
             
             var items = DbManager.ExecQuery<CsvItem>("SELECT * FROM [Journal] WHERE Date = @date ORDER BY VehicleType, Route",
                 new Dictionary<string, object>() { { "date", /*DateTime.Today*/ new DateTime(2014, 09, 07) } }).ToList();
@@ -60,12 +60,12 @@ namespace DispetcherWF
 
         private void CsvFileProcessorOnAfterDataChange()
         {
-            LoadData();
+            this.Invoke(new Action(LoadData));
         }
 
         private void CsvFileProcessorOnBeforeDataChange()
         {
-
+            MessageBox.Show("Получены новые данные.");
         }
     }
 }
