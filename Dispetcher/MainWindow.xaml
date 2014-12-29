@@ -10,7 +10,7 @@
                 <DataGridTextColumn Header="Дата" Binding="{Binding Date}"/>
                 <DataGridTextColumn Header="Маршрут" Binding="{Binding Route}"/>
                 <DataGridTextColumn Header="Вид транспорта" Binding="{Binding VehicleType}"/>
-                <DataGridTextColumn Header="Бортовой номер" Binding="{Binding SideNumber}"/>
+                <DataGridTextColumn Header="Бортовой номер" Binding="{Binding SideNumberPlan}"/>
                 <DataGridTextColumn Header="Расписание" Binding="{Binding Schedule}"/>
             </DataGrid.Columns>
         </DataGrid>

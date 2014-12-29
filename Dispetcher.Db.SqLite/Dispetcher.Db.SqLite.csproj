@@ -60,7 +60,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>xcopy /E /Y "$(TargetDir)*.*" "$(ProjectDir)..\Dispetcher\$(OutDir)"</PostBuildEvent>
+    <PostBuildEvent>xcopy /E /Y "$(TargetDir)*.*" "$(ProjectDir)..\Dispetcher\$(OutDir)"
+xcopy /E /Y "$(TargetDir)*.*" "$(ProjectDir)..\DispetcherWF\$(OutDir)"</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.94.0\build\net45\System.Data.SQLite.Core.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
