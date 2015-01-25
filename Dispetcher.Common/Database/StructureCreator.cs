@@ -14,13 +14,12 @@ namespace Dispetcher.Common.Database
 
             var tables = manager.ExecQuery<MasterTableItem>(@"SELECT type,name,sql,tbl_name FROM sqlite_master").ToList();
 
-            if (tables.Any(t => t.tbl_name == "Journal" && t.type == "table"))
-                return;
-
-            var transaction = manager.BeginTransaction();
-            try
+            if (!tables.Any(t => t.tbl_name == "Journal" && t.type == "table"))
             {
-                manager.ExecNonQuery(String.Format(@"CREATE TABLE `Journal` (
+                var transaction = manager.BeginTransaction();
+                try
+                {
+                    manager.ExecNonQuery(String.Format(@"CREATE TABLE `Journal` (
 	`Id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 	`Date`	TEXT NOT NULL,
 	`SideNumberPlan`	TEXT,
@@ -30,14 +29,37 @@ namespace Dispetcher.Common.Database
 	`VehicleType`	INTEGER,
     `Protected` INTEGER
 );"));
-
-                transaction.Commit();
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    // TODO log
+                    transaction.Rollback();
+                    throw;
+                }
             }
-            catch (Exception)
+
+            if (!tables.Any(t => t.tbl_name == "UserLog" && t.type == "table"))
             {
-                // TODO log
-                transaction.Rollback();
-                throw;
+                var transaction = manager.BeginTransaction();
+                try
+                {
+                    manager.ExecNonQuery(String.Format(@"CREATE TABLE `UserLog` (
+	`Id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+	`Date`	TEXT NOT NULL,
+	`ActionType`	INTEGER NOT NULL,
+    `RecId` INTEGER,
+	`OldValue`	TEXT,
+	`NewValue`	TEXT
+);"));
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    // TODO log
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
 

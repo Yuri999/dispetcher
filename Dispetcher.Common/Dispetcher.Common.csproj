@@ -63,6 +63,8 @@
     <Compile Include="Mail\IMailClient.cs" />
     <Compile Include="Mail\YandexMailClient.cs" />
     <Compile Include="Models\CsvItem.cs" />
+    <Compile Include="Models\UserActionType.cs" />
+    <Compile Include="Models\UserLog.cs" />
     <Compile Include="Models\VehicleType.cs" />
     <Compile Include="Processor\CsvFileProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

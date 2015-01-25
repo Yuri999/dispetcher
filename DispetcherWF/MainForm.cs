@@ -50,6 +50,7 @@ namespace DispetcherWF
             foreach (var csvItem in items)
             {
                 var row = dataSet1.Tables[0].NewRow();
+                row["Id"] = csvItem.Id;
                 row["Route"] = String.Format("{0} {1}", csvItem.VehicleType == VehicleType.Трамвай ? "ТР" : "ТБ", csvItem.Route);
                 row["SideNumberPlan"] = csvItem.SideNumberPlan;
                 row["SideNumberFact"] = csvItem.SideNumberFact;
@@ -67,5 +68,67 @@ namespace DispetcherWF
         {
             MessageBox.Show("Получены новые данные.");
         }
+
+        private string sideNumberFact_BeginEdit_value;
+
+        private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "SideNumberFact")
+            {
+                sideNumberFact_BeginEdit_value = Convert.ToString(dataGridView1[e.ColumnIndex, e.RowIndex].Value);
+            }
+        }
+
+        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (dataGridView1.Columns[e.ColumnIndex].Name == "SideNumberFact")
+            {
+                var transaction = DbManager.BeginTransaction();
+                try
+                {
+                    var id = Convert.ToInt64(dataGridView1["Id", e.RowIndex].Value);
+
+                    DbManager.ExecNonQuery("INSERT INTO [UserLog] (Date, ActionType, RecId, OldValue, NewValue) VALUES (@date, @actionType, @recId, @oldValue, @newValue)",
+                        new Dictionary<string, object>()
+                        {
+                            {"date", DateTime.Now},
+                            {"actionType", UserActionType.SideNumberFactChanged},
+                            {"recId", id},
+                            {"oldValue", sideNumberFact_BeginEdit_value },
+                            {"newValue", dataGridView1[e.ColumnIndex, e.RowIndex].Value}
+                        });
+
+                    DbManager.ExecNonQuery("UPDATE [Journal] SET SideNumberFact=@fact WHERE Id=@id", 
+                        new Dictionary<string, object>()
+                        {
+                            {"fact", dataGridView1[e.ColumnIndex, e.RowIndex].Value},
+                            {"id", id}
+                        });
+
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    // TODO log
+                    transaction.Rollback();
+                    throw;
+                }
+
+                dataGridView1.Refresh();
+            }
+        }
+
+        private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex > -1 && dataGridView1["SideNumberPlan", e.RowIndex].Value.ToString() != dataGridView1["SideNumberFact", e.RowIndex].Value.ToString())
+            {
+                var brush = dataGridView1[e.ColumnIndex, e.RowIndex].Selected ? new SolidBrush(Color.Pink) : new SolidBrush(Color.Orange);
+                var bounds = new Rectangle(e.CellBounds.Left, e.CellBounds.Top, e.CellBounds.Width-1, e.CellBounds.Height-1);
+                e.Graphics.FillRectangle(brush, bounds);
+                e.PaintContent(e.CellBounds);
+                e.Handled = true;
+            }
+        }
+
     }
 }
