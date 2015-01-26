@@ -83,38 +83,43 @@ namespace DispetcherWF
         {
             if (dataGridView1.Columns[e.ColumnIndex].Name == "SideNumberFact")
             {
-                var transaction = DbManager.BeginTransaction();
-                try
+                var newValue = Convert.ToString(dataGridView1[e.ColumnIndex, e.RowIndex].Value);
+                if (newValue != sideNumberFact_BeginEdit_value)
                 {
-                    var id = Convert.ToInt64(dataGridView1["Id", e.RowIndex].Value);
+                    var transaction = DbManager.BeginTransaction();
+                    try
+                    {
+                        var id = Convert.ToInt64(dataGridView1["Id", e.RowIndex].Value);
 
-                    DbManager.ExecNonQuery("INSERT INTO [UserLog] (Date, ActionType, RecId, OldValue, NewValue) VALUES (@date, @actionType, @recId, @oldValue, @newValue)",
-                        new Dictionary<string, object>()
-                        {
-                            {"date", DateTime.Now},
-                            {"actionType", UserActionType.SideNumberFactChanged},
-                            {"recId", id},
-                            {"oldValue", sideNumberFact_BeginEdit_value },
-                            {"newValue", dataGridView1[e.ColumnIndex, e.RowIndex].Value}
-                        });
+                        DbManager.ExecNonQuery("INSERT INTO [UserLog] (Date, ActionType, RecId, OldValue, NewValue) " +
+                                               "VALUES (@date, @actionType, @recId, @oldValue, @newValue)",
+                            new Dictionary<string, object>()
+                            {
+                                {"date", DateTime.Now},
+                                {"actionType", UserActionType.SideNumberFactChanged},
+                                {"recId", id},
+                                {"oldValue", sideNumberFact_BeginEdit_value},
+                                {"newValue", newValue}
+                            });
 
-                    DbManager.ExecNonQuery("UPDATE [Journal] SET SideNumberFact=@fact WHERE Id=@id", 
-                        new Dictionary<string, object>()
-                        {
-                            {"fact", dataGridView1[e.ColumnIndex, e.RowIndex].Value},
-                            {"id", id}
-                        });
+                        DbManager.ExecNonQuery("UPDATE [Journal] SET SideNumberFact=@fact, Protected=1 WHERE Id=@id",
+                            new Dictionary<string, object>()
+                            {
+                                {"fact", newValue},
+                                {"id", id}
+                            });
 
-                    transaction.Commit();
+                        transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        // TODO log
+                        transaction.Rollback();
+                        throw;
+                    }
+
+                    dataGridView1.Refresh();
                 }
-                catch (Exception)
-                {
-                    // TODO log
-                    transaction.Rollback();
-                    throw;
-                }
-
-                dataGridView1.Refresh();
             }
         }
 

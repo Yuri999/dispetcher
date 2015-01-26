@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database\StructureCreator.cs" />
+    <Compile Include="Database\TransactionWrapper.cs" />
     <Compile Include="Events\AttachmentSavedEventHandler.cs" />
     <Compile Include="IoC\IocInitializer.cs" />
     <Compile Include="Database\AttemptCountExceededException.cs" />
@@ -62,6 +63,8 @@
     <Compile Include="IoC\Locator.cs" />
     <Compile Include="Mail\IMailClient.cs" />
     <Compile Include="Mail\YandexMailClient.cs" />
+    <Compile Include="Managers\CsvItemManager.cs" />
+    <Compile Include="Managers\EntityManager.cs" />
     <Compile Include="Models\CsvItem.cs" />
     <Compile Include="Models\UserActionType.cs" />
     <Compile Include="Models\UserLog.cs" />

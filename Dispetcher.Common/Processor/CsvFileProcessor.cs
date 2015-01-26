@@ -8,6 +8,7 @@ using System.Threading;
 using Dispetcher.Common.Database;
 using Dispetcher.Common.IoC;
 using Dispetcher.Common.Mail;
+using Dispetcher.Common.Managers;
 using Dispetcher.Common.Models;
 
 namespace Dispetcher.Common.Processor
@@ -23,10 +24,17 @@ namespace Dispetcher.Common.Processor
         private Thread _thread;
         private bool _terminated;
 
-        private readonly Queue<string> _files = new Queue<string>(); 
+        private readonly Queue<string> _files = new Queue<string>();
+
+        #region Services
 
         private Lazy<IDbManager> dbManagerLazy = new Lazy<IDbManager>(() => Locator.Resolve<IDbManager>());
-        private IDbManager dbManager { get { return dbManagerLazy.Value; } }
+        private IDbManager DbManager { get { return dbManagerLazy.Value; } }
+
+        private Lazy<CsvItemManager> csvItemManagerLazy = new Lazy<CsvItemManager>(() => Locator.Resolve<CsvItemManager>());
+        private CsvItemManager CsvItemManager { get { return csvItemManagerLazy.Value; } }
+
+        #endregion
 
         public CsvFileProcessor()
         {
@@ -119,7 +127,7 @@ namespace Dispetcher.Common.Processor
 
         private void ProcessFile(string filename)
         {
-            var newItems = ReadItems(filename, true).ToList();
+            var fileItems = ReadItems(filename, true).ToList();
 
             if (BeforeDataChange != null)
             {
@@ -128,30 +136,37 @@ namespace Dispetcher.Common.Processor
 
             try
             {
-                var transaction = dbManager.BeginTransaction();
-                try
+                TransactionWrapper.Execute(() =>
                 {
-                    var dates = newItems.Select(x => x.Date).Distinct().ToArray();
+                    var dates = fileItems.Select(x => x.Date).Distinct().ToArray();
 
-                    // считываем из базы защищенные записи
-                    var protectedItems = dbManager.ExecQuery<CsvItem>("SELECT * FROM [Journal] WHERE Date IN (@dates) AND Protected = 1",
-                        new Dictionary<string, object>() {{"dates", dates}}).ToList();
+                    // считываем из базы отредактированные записи
+                    var userItems = CsvItemManager.Select("Date IN (@dates) AND Protected = 1", new Dictionary<string, object>() { { "dates", dates } }).ToList();
 
-                    // удалям все незащищенные записи за эти числа
-                    dbManager.ExecNonQuery("DELETE FROM [Journal] WHERE Date IN (@dates) AND Protected = 0",
-                        new Dictionary<string, object>() { { "dates", dates } });
+                    // удалям все записи за эти числа
+                    var deletedRows = CsvItemManager.Delete("Date IN (@dates)", new Dictionary<string, object>() { { "dates", dates } });
 
-                    // TODO как мержить изменения то ???
+                    // вставляем новые записи
+                    foreach (var fileItem in fileItems)
+                    {
+                        CsvItemManager.Insert(fileItem);
+                    }
 
-                    InsertItems(newItems);
+                    var mergedItems = new List<CsvItem>();
+                    foreach (var userItem in userItems)
+                    {
+                        var fileItem = fileItems.FirstOrDefault(x => x.Date == userItem.Date && x.Schedule == userItem.Schedule
+                                                             && x.Route == userItem.Route && x.VehicleType == userItem.VehicleType);
+                        if (fileItem != null && fileItem.SideNumberFact != userItem.SideNumberFact)
+                        {
+                            CsvItemManager.Update(fileItem.Id, new Dictionary<string, object> { { "SideNumberFact", userItem.SideNumberFact }, {"Protected", true} });
+                            mergedItems.Add(userItem);
+                        }
+                    }
 
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    // TODO log
-                    transaction.Rollback();
-                }
+                    var unmergedItems = userItems.Except(mergedItems);
+
+                }, ex => { throw ex; });
                 
                 File.Delete(filename);
             }
@@ -216,31 +231,6 @@ namespace Dispetcher.Common.Processor
             return dict.Values.ToList();
         }
 
-        private void InsertItems(IEnumerable<CsvItem> items)
-        {
-            foreach (var csvItem in items)
-            {
-                dbManager.ExecNonQuery("INSERT INTO [Journal] (Date, SideNumberPlan, SideNumberFact, Schedule, Route, VehicleType, Protected) " +
-                                        "VALUES (@date, @sidenumberplan, @sidenumberfact, @schedule, @route, @vehicletype, @protected)",
-                    new Dictionary<string, object>()
-                    {
-                        { "date", csvItem.Date }, 
-                        { "sidenumberplan", csvItem.SideNumberPlan },
-                        { "sidenumberfact", csvItem.SideNumberFact },
-                        { "schedule", csvItem.Schedule },
-                        { "route", csvItem.Route },
-                        { "vehicletype", csvItem.VehicleType },
-                        { "protected", false },
-                    });
-            }
-        }
-
-        private void DeleteItems(IEnumerable<CsvItem> items)
-        {
-            dbManager.ExecNonQuery("DELETE FROM [Journal] WHERE Id IN (@ids)",
-                new Dictionary<string, object>() { { "ids", items.Select(i => i.Id).ToArray() } });
-        }
-
         /// <summary>
         /// Парсит строку в объект CsvItem
         /// </summary>
@@ -249,7 +239,7 @@ namespace Dispetcher.Common.Processor
         /// <exception cref="Exception"></exception>
         private CsvItem ConvertToCsvItem(string line)
         {
-            var items = line.Split(new [] { ';' }).ToList();
+            var items = line.Split(new [] { ';', '\t' }).ToList();
             if (items.Count < 5)
                 return null;
 

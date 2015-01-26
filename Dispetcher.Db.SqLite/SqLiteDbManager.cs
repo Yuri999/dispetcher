@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
@@ -156,48 +157,53 @@ namespace Dispetcher.Db.SqLite
         public IEnumerable<T> ExecQuery<T>(string sqlQuery, Dictionary<string, object> parameters = null)
         {
             var type = typeof(T);
-            var constructor = typeof(T).GetConstructor(new Type[0]);
-            if (constructor == null)
-                throw new Exception(String.Format("Нет конструктора по умолчанию для типа {0}.", type.ToString()));
 
             var cmd = connection.CreateCommand();
             cmd.CommandText = sqlQuery;
 
             if (parameters != null)
             {
-                foreach (var item in parameters)
-                {
-                    var p = cmd.CreateParameter();
-                    p.Direction = ParameterDirection.Input;
-                    p.ParameterName = item.Key;
-                    p.Value = item.Value;
-                    cmd.Parameters.Add(p);
-                }
+                ProcessParameters(cmd, parameters);
             }
 
             using (var reader = cmd.ExecuteReader())
             {
-                while (reader.Read())
+                if (type.IsPrimitive)
                 {
-                    var values = reader.GetValues();
-                    var item = (T)constructor.Invoke(null);
-                    foreach (string key in values.AllKeys)
+                    while (reader.Read())
                     {
-                        var prop = type.GetProperty(key);
-                        if (prop.CanWrite)
+                        var item = (T) Convert.ChangeType(reader[0], type);
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    var constructor = typeof(T).GetConstructor(new Type[0]);
+                    if (constructor == null)
+                        throw new Exception(String.Format("Нет конструктора по умолчанию для типа {0}.", type.ToString()));
+
+                    while (reader.Read())
+                    {
+                        var values = reader.GetValues();
+                        var item = (T) constructor.Invoke(null);
+                        foreach (string key in values.AllKeys)
                         {
-                            if (prop.PropertyType.IsEnum)
+                            var prop = type.GetProperty(key);
+                            if (prop.CanWrite)
                             {
-                                prop.SetValue(item, Enum.ToObject(prop.PropertyType, reader[key]));
-                            }
-                            else
-                            {
-                                prop.SetValue(item, Convert.ChangeType(reader[key], prop.PropertyType));
+                                if (prop.PropertyType.IsEnum)
+                                {
+                                    prop.SetValue(item, Enum.ToObject(prop.PropertyType, reader[key]));
+                                }
+                                else
+                                {
+                                    prop.SetValue(item, Convert.ChangeType(reader[key], prop.PropertyType));
+                                }
                             }
                         }
-                    }
 
-                    yield return item;
+                        yield return item;
+                    }
                 }
             }
         }
@@ -209,7 +215,34 @@ namespace Dispetcher.Db.SqLite
 
             if (parameters != null)
             {
-                foreach (var item in parameters)
+                ProcessParameters(cmd, parameters);
+            }
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        private void ProcessParameters(SQLiteCommand cmd, Dictionary<string, object> parameters)
+        {
+            foreach (var item in parameters)
+            {
+                var a = item.Value as Array;
+                if (a != null)
+                {
+                    var l = new List<string>();
+                    for (var i = 0; i < a.Length; i++)
+                    {
+                        var name = String.Format("@{0}_{1}", item.Key, i + 1);
+                        l.Add(name);
+
+                        var p = cmd.CreateParameter();
+                        p.Direction = ParameterDirection.Input;
+                        p.ParameterName = name;
+                        p.Value = a.GetValue(i);
+                        cmd.Parameters.Add(p);
+                    }
+                    cmd.CommandText = cmd.CommandText.Replace("@" + item.Key, String.Join(",", l));
+                }
+                else
                 {
                     var p = cmd.CreateParameter();
                     p.Direction = ParameterDirection.Input;
@@ -217,9 +250,7 @@ namespace Dispetcher.Db.SqLite
                     p.Value = item.Value;
                     cmd.Parameters.Add(p);
                 }
-            }
-
-            return cmd.ExecuteNonQuery();
+            }            
         }
 
 
