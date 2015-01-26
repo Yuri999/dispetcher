@@ -66,7 +66,12 @@ namespace Dispetcher.Common.IoC
             {
                 if (type.IsDefined(typeof(ComponentAttribute)))
                 {
-                    var interfaceType = type.GetInterfaces().First(i => i.IsDefined(typeof(ComponentInterfaceAttribute)));
+                    var interfaceType = type.GetInterfaces().FirstOrDefault(i => i.IsDefined(typeof(ComponentInterfaceAttribute)));
+                    if (interfaceType == null)
+                    {
+                        throw new Exception(String.Format("Не удалось найти родительский интерфейс с атрибутом [ComponentInterface] для типа {0}.", type.ToString()));
+                    }
+
                     var reg = builder.RegisterType(type).AsSelf().As(interfaceType);
                     var interfaceAttribute = interfaceType.GetCustomAttribute<ComponentInterfaceAttribute>();
                     switch (interfaceAttribute.LifeTime)
