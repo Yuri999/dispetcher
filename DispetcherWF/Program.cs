@@ -27,9 +27,16 @@ namespace DispetcherWF
             Application.SetCompatibleTextRenderingDefault(false);
             Application.ApplicationExit += ApplicationOnApplicationExit;
 
-            Init();
-            
-            Application.Run(new MainForm());
+            try
+            {
+                Init();
+                Application.Run(new MainForm());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message+"\r\n\r\n"+ex.StackTrace, "Ошибка запуска");
+                Application.Exit();
+            }
         }
 
         private static void ApplicationOnApplicationExit(object sender, EventArgs eventArgs)
@@ -40,36 +47,28 @@ namespace DispetcherWF
 
         private static void Init()
         {
-            try
-            {
-                // инициализируем контейнер
-                IocInitializer.Init();
+            // инициализируем контейнер
+            IocInitializer.Init();
 
-                // соединяемся с локальной БД
-                Locator.Resolve<IDbManager>().Connect();
+            // соединяемся с локальной БД
+            Locator.Resolve<IDbManager>().Connect();
 
-                StructureCreator.Create();
+            StructureCreator.Create();
 
-                var mailClient = Locator.Resolve<IMailClient>();
+            var mailClient = Locator.Resolve<IMailClient>();
 
-                #region Запускаем периодический забор почты и скидывание на диск
-                _checkMailboxTask = new CheckMailboxTask(mailClient, 5000);
-                _checkMailboxTask.Start();
-                IocInitializer.RegisterInstance(_checkMailboxTask);
-                #endregion
+            #region Запускаем периодический забор почты и скидывание на диск
+            _checkMailboxTask = new CheckMailboxTask(mailClient, 5000);
+            _checkMailboxTask.Start();
+            IocInitializer.RegisterInstance(_checkMailboxTask);
+            #endregion
 
-                #region запускаем процессор CSV
-                _csvFileProcessor = new CsvFileProcessor();
-                _csvFileProcessor.Subscribe(mailClient);
-                _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);
-                IocInitializer.RegisterInstance(_csvFileProcessor);
-                #endregion
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, "Ошибка запуска");
-                Application.Exit();
-            }
+            #region запускаем процессор CSV
+            _csvFileProcessor = new CsvFileProcessor();
+            _csvFileProcessor.Subscribe(mailClient);
+            _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);
+            IocInitializer.RegisterInstance(_csvFileProcessor);
+            #endregion
         }
 
         private static void Dispose()
