@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Dispetcher.Common</RootNamespace>
     <AssemblyName>Dispetcher.Common</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -61,6 +62,7 @@
     <Compile Include="IoC\ComponentInterfaceAttribute.cs" />
     <Compile Include="IoC\ComponentLifeTime.cs" />
     <Compile Include="IoC\Locator.cs" />
+    <Compile Include="Mail\CheckMailResult.cs" />
     <Compile Include="Mail\IMailClient.cs" />
     <Compile Include="Mail\YandexMailClient.cs" />
     <Compile Include="Managers\CsvItemManager.cs" />
@@ -77,6 +79,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Tasks\CheckMailboxTask.cs" />
+    <Compile Include="Tasks\CheckMailEventArgs.cs" />
+    <Compile Include="Tasks\ICheckMailTask.cs" />
     <Compile Include="Tasks\ITask.cs" />
     <Compile Include="Tasks\LocalDbReconnectTask.cs" />
     <Compile Include="Tasks\SendChangesTask.cs" />

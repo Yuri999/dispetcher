@@ -64,17 +64,17 @@ namespace Dispetcher.Common.IoC
         {
             foreach (var type in assembly.GetTypes())
             {
-                if (type.IsDefined(typeof(ComponentAttribute)))
+                if (type.IsDefined(typeof(ComponentAttribute), false))
                 {
-                    var interfaceType = type.GetInterfaces().FirstOrDefault(i => i.IsDefined(typeof(ComponentInterfaceAttribute)));
+                    var interfaceType = type.GetInterfaces().FirstOrDefault(i => i.IsDefined(typeof(ComponentInterfaceAttribute), false));
                     if (interfaceType == null)
                     {
                         throw new Exception(String.Format("Не удалось найти родительский интерфейс с атрибутом [ComponentInterface] для типа {0}.", type.ToString()));
                     }
 
                     var reg = builder.RegisterType(type).AsSelf().As(interfaceType);
-                    var interfaceAttribute = interfaceType.GetCustomAttribute<ComponentInterfaceAttribute>();
-                    switch (interfaceAttribute.LifeTime)
+                    var interfaceAttributes = interfaceType.GetCustomAttributes(typeof(ComponentInterfaceAttribute), false);
+                    switch (((ComponentInterfaceAttribute)interfaceAttributes[0]).LifeTime)
                     {
                         case ComponentLifeTime.Singleton:
                             reg.SingleInstance();

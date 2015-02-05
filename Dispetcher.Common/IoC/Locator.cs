@@ -15,12 +15,12 @@ namespace Dispetcher.Common.IoC
             if (IocInitializer.CurrentContainer == null)
                 throw new Exception("IoC не инициализирован.");
 
-            var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
-            if (interfaceAttr != null && interfaceAttr.AllowMultiple)
+            var interfaceAttrs = typeof(T).GetCustomAttributes(typeof(ComponentInterfaceAttribute), false);
+            if (interfaceAttrs != null && interfaceAttrs.Length > 0 && ((ComponentInterfaceAttribute)interfaceAttrs[0]).AllowMultiple)
                 throw new Exception(String.Format("Multiple components are allowed for type {0}", typeof(T)));
 
             var components = IocInitializer.CurrentContainer.Resolve<IEnumerable<T>>().ToList();
-            if (interfaceAttr != null && !interfaceAttr.AllowMultiple && components.Count > 1)
+            if (interfaceAttrs != null && interfaceAttrs.Length > 0 && !((ComponentInterfaceAttribute)interfaceAttrs[0]).AllowMultiple && components.Count > 1)
                 throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
 
             if (components.Count == 0)
@@ -39,15 +39,15 @@ namespace Dispetcher.Common.IoC
             if (IocInitializer.CurrentContainer == null)
                 throw new Exception("IoC не инициализирован.");
 
-            var interfaceAttr = typeof(T).GetCustomAttribute<ComponentInterfaceAttribute>();
-            if (!interfaceAttr.AllowMultiple)
+            var interfaceAttrs = typeof(T).GetCustomAttributes(typeof(ComponentInterfaceAttribute), false);
+            if (interfaceAttrs != null && interfaceAttrs.Length > 0 && !((ComponentInterfaceAttribute)interfaceAttrs[0]).AllowMultiple)
                 throw new Exception(String.Format("Multiple components are not allowed for type {0}", typeof(T)));
 
             return IocInitializer.CurrentContainer.Resolve<IEnumerable<T>>().OrderBy(x =>
-                {
-                    var attr = x.GetType().GetCustomAttribute<ComponentAttribute>();
-                    return attr.Order;
-                });
+            {
+                var attrs = x.GetType().GetCustomAttributes(typeof (ComponentAttribute), false);
+                return ((ComponentAttribute) attrs[0]).Order;
+            });
         }
     }
 }
