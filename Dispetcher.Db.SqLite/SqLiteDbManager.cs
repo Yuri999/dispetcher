@@ -193,11 +193,11 @@ namespace Dispetcher.Db.SqLite
                             {
                                 if (prop.PropertyType.IsEnum)
                                 {
-                                    prop.SetValue(item, Enum.ToObject(prop.PropertyType, reader[key]));
+                                    prop.SetValue(item, Enum.ToObject(prop.PropertyType, reader[key]), null);
                                 }
                                 else
                                 {
-                                    prop.SetValue(item, Convert.ChangeType(reader[key], prop.PropertyType));
+                                    prop.SetValue(item, Convert.ChangeType(reader[key], prop.PropertyType), null);
                                 }
                             }
                         }

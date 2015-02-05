@@ -51,13 +51,17 @@ namespace Dispetcher.Common.Mail
         /// <summary>
         /// Проверить почту
         /// </summary>
-        public void Check()
+        public CheckMailResult Check()
         {
+            var result = new CheckMailResult();
+
             lock (_checkSyncLock)
             {
                 using (var client = new ImapClient(serverAddress, serverPort, _username, _password, AuthMethod.Login, true))
                 {
                     var uids = client.Search(SearchCondition.Unseen()).ToList();
+                    result.NewMessagesCount = uids.Count;
+
                     foreach (var uid in uids)
                     {
                         try
@@ -73,14 +77,19 @@ namespace Dispetcher.Common.Mail
                                     AttachmentSaved(mailMessage.Date(), tmpFilename);
                                 }
                             }
+                            
+                            result.ProcessedMessagesCount++;
                         }
-                        catch (Exception e)
+                        catch (Exception ex)
                         {
+                            result.Exceptions.Add(ex);
                             // TODO log
                         }
                     }
                 }
             }
+
+            return result;
         }
 
         private IEnumerable<string> ExtractAttachments(uint uid, MailMessage message)

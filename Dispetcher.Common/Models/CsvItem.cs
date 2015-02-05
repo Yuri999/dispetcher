@@ -28,7 +28,9 @@ namespace Dispetcher.Common.Models
 
         public bool Protected { get; set; }
 
-        public int DateSideNumberHash { get { return String.Format("{0}|{1}", Date.ToUniversalTime().ToString("o"), SideNumberPlan).GetHashCode(); } }
+        public DateTime ModifyDate { get; set; }
+
+        public string CompositeRouteKey { get { return String.Format("{0}|{1}|{2}|{3}", Date.ToShortDateString(), Route, VehicleType, Schedule); } }
 
         public override string ToString()
         {

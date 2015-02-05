@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Dispetcher.Common.Tasks
 {
-    public interface ITask
+    public interface ICheckMailTask : ITask
     {
-        void Start();
-        void Stop();
+        event EventHandler<CheckMailEventArgs> Check;
     }
 }

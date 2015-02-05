@@ -9,7 +9,7 @@ using Dispetcher.Common.Mail;
 
 namespace Dispetcher.Common.Tasks
 {
-    public class CheckMailboxTask : ITask
+    public class CheckMailboxTask : ICheckMailTask
     {
         private Thread _thread;
         private bool _terminated;
@@ -54,7 +54,8 @@ namespace Dispetcher.Common.Tasks
 
         private void CheckMailbox()
         {
-            _mailClient.Check();
+            var result = _mailClient.Check();
+            RaiseCheckEvent(new CheckMailEventArgs(result));
         }
 
         public void Stop()
@@ -64,6 +65,14 @@ namespace Dispetcher.Common.Tasks
                 _terminated = true;
                 _thread = null;
             }
+        }
+
+        public event EventHandler<CheckMailEventArgs> Check;
+
+        private void RaiseCheckEvent(CheckMailEventArgs args)
+        {
+            if (Check != null)
+                Check(this, args);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace DispetcherWF
 
         private static CheckMailboxTask _checkMailboxTask;
         private static CsvFileProcessor _csvFileProcessor;
+        private static SendChangesTask _sendChangesTask;
 
         /// <summary>
         /// The main entry point for the application.
@@ -58,16 +59,22 @@ namespace DispetcherWF
             var mailClient = Locator.Resolve<IMailClient>();
 
             #region Запускаем периодический забор почты и скидывание на диск
-            _checkMailboxTask = new CheckMailboxTask(mailClient, 5000);
+            _checkMailboxTask = new CheckMailboxTask(mailClient, 5000); // TODO settings
             _checkMailboxTask.Start();
             IocInitializer.RegisterInstance(_checkMailboxTask);
             #endregion
 
-            #region запускаем процессор CSV
+            #region Запускаем процессор CSV
             _csvFileProcessor = new CsvFileProcessor();
             _csvFileProcessor.Subscribe(mailClient);
             _csvFileProcessor.CheckExistingFiles(mailClient.SaveFolder);
             IocInitializer.RegisterInstance(_csvFileProcessor);
+            #endregion
+
+            #region Запускаем отправку
+            _sendChangesTask = new SendChangesTask();
+            _sendChangesTask.Start();
+            IocInitializer.RegisterInstance(_sendChangesTask);
             #endregion
         }
 
@@ -78,6 +85,9 @@ namespace DispetcherWF
 
             if (_checkMailboxTask != null)
                 _checkMailboxTask.Stop();
+
+            if (_sendChangesTask != null)
+                _sendChangesTask.Stop();
         }
     }
 }

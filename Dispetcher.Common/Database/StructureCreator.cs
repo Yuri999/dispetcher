@@ -27,7 +27,8 @@ namespace Dispetcher.Common.Database
 	`Schedule`	TEXT,
 	`Route`	TEXT,
 	`VehicleType`	INTEGER,
-    `Protected` INTEGER
+    `Protected` INTEGER,
+    `ModifyDate`	TEXT NOT NULL
 );"));
                     transaction.Commit();
                 }

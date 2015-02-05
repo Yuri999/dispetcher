@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Dispetcher.Common.Database;
 using Dispetcher.Common.IoC;
 using Dispetcher.Common.Models;
-using Microsoft.Win32.SafeHandles;
 
 namespace Dispetcher.Common.Managers
 {
@@ -18,8 +16,8 @@ namespace Dispetcher.Common.Managers
 
         public void Insert(CsvItem obj)
         {
-            var id = DbManager.ExecQuery<long>("INSERT INTO [Journal] (Date, SideNumberPlan, SideNumberFact, Schedule, Route, VehicleType, Protected) " +
-                        "VALUES (@date, @sidenumberplan, @sidenumberfact, @schedule, @route, @vehicletype, @protected); SELECT last_insert_rowid();",
+            var id = DbManager.ExecQuery<long>("INSERT INTO [Journal] (Date, SideNumberPlan, SideNumberFact, Schedule, Route, VehicleType, Protected, ModifyDate) " +
+                        "VALUES (@date, @sidenumberplan, @sidenumberfact, @schedule, @route, @vehicletype, @protected, @modifydate); SELECT last_insert_rowid();",
                 new Dictionary<string, object>()
                             {
                                 { "date", obj.Date }, 
@@ -29,6 +27,7 @@ namespace Dispetcher.Common.Managers
                                 { "route", obj.Route },
                                 { "vehicletype", obj.VehicleType },
                                 { "protected", false },
+                                { "modifydate", DateTime.Now },
                             }).First();
             obj.Id = id;
         }

@@ -155,8 +155,9 @@ namespace Dispetcher.Common.Processor
                     var mergedItems = new List<CsvItem>();
                     foreach (var userItem in userItems)
                     {
-                        var fileItem = fileItems.FirstOrDefault(x => x.Date == userItem.Date && x.Schedule == userItem.Schedule
-                                                             && x.Route == userItem.Route && x.VehicleType == userItem.VehicleType);
+                        var fileItem = fileItems.FirstOrDefault(x => x.CompositeRouteKey == userItem.CompositeRouteKey);
+                        
+                        // возвращаем пользовательские правки
                         if (fileItem != null && fileItem.SideNumberFact != userItem.SideNumberFact)
                         {
                             CsvItemManager.Update(fileItem.Id, new Dictionary<string, object> { { "SideNumberFact", userItem.SideNumberFact }, {"Protected", true} });
@@ -165,6 +166,10 @@ namespace Dispetcher.Common.Processor
                     }
 
                     var unmergedItems = userItems.Except(mergedItems);
+                    foreach (var unmergedItem in unmergedItems)
+                    {
+                        CsvItemManager.Insert(unmergedItem);
+                    }
 
                 }, ex => { throw ex; });
                 
@@ -274,19 +279,6 @@ namespace Dispetcher.Common.Processor
             csvItem.VehicleType = vt;
 
             return csvItem;
-        }
-
-        class DateSideNummberEqualityComparer : IEqualityComparer<CsvItem>
-        {
-            public bool Equals(CsvItem x, CsvItem y)
-            {
-                return x.DateSideNumberHash == y.DateSideNumberHash;
-            }
-
-            public int GetHashCode(CsvItem obj)
-            {
-                return obj.DateSideNumberHash;
-            }
         }
     }
 }

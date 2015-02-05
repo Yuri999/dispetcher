@@ -24,7 +24,7 @@ namespace Dispetcher.Common.Mail
         /// <summary>
         /// Проверяет новую почту и сохраняет все вложения на диск
         /// </summary>
-        void Check();
+        CheckMailResult Check();
 
         string SaveFolder { get; }
     }
